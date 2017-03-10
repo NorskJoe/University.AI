@@ -131,16 +131,24 @@ def depthFirstSearch(problem):
         successors = problem.getSuccessors(current)
         for successor in successors:
             stack.push(successor[0])
-            solution[current] = successor[0]
-            print "adding ", current, " to ", successor[1]
+            solution[successor[0]] = current
+            print "adding ", current, " to ", successor[0]
 
     newList = []
     import pprint
     print "solution contains: "
     pprint.pprint(solution)
-    # return
+
+
+    for value in range(5):
+        print "curr is: ", goal
+        print "path to goal is: ", solution[goal]
+        goal = solution[goal]
+
+    return
     while goal != None:
         print goal
+        print solution[goal]
         goal = solution[goal]
 
 
