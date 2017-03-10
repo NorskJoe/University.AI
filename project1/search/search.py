@@ -74,83 +74,34 @@ def tinyMazeSearch(problem):
 
 def depthFirstSearch(problem):
     """
-    Search the deepest nodes in the search tree first.
+        stack will hold a 3-tuple:
+        current: position of the current node in the graph
+        directions list: list of directions used to move to this node
+        visited list: list of nodes already visisted
 
-    Your search algorithm needs to return a list of actions that reaches the
-    goal. Make sure to implement a graph search algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
+        Summary:
+        1. Initialise stack
+        2. Take currentNode from top of stack
+        3. If already visited, take next node
+        4. If not visisted, check if it is the goal and return list of directions used to get there
+        5. If not the goal, push the currentNode to the stack, along with the direction used to get there, and add it to the list of visisted nodes
     """
-    "*** YOUR CODE HERE ***"
-    # import directions for easier use
-    from game import Directions
-    n = Directions.NORTH
-    e = Directions.EAST
-    s = Directions.SOUTH
-    w = Directions.WEST
-
-    # list of directions to be returned
-    directions = []
-    # list of states to keep track of visitation
-    visited = []
-    # map to backtrace through solution
-    solution = {}
-
-
-    # first initialise the stack to start state
+    # first initialise the stack
     from util import Stack
     stack = Stack()
-    start = problem.getStartState()
-    stack.push(start)
-    print "start is: ", start
+    stack.push((problem.getStartState(), [], []))
 
-    # check start for goal, just in case
-    if problem.isGoalState(start):
-        print "reached goal: ", start
-        return #something here
+    while not stack.isEmpty():
+        current, directions, visited = stack.pop()
+        for nextNode, direction, previous in problem.getSuccessors(current):
+            if nextNode not in visited:
+                if problem.isGoalState(nextNode):
+                    return directions + [direction]
+                stack.push((nextNode, directions + [direction], visited
+                    + [current] ))
+                print stack.pop()
 
-    # main body of algorithm
-    while stack:
-        current = stack.pop()
-        # print "current is: ", current
-        if current in visited:
-            continue
-        if problem.isGoalState(current):
-            goal = current
-            print "reached goal: ", current
-            # print "stack contains: "
-            # while stack.isEmpty() != True:
-            #     print stack.pop()
-            break #something here
-        visited.append(current)
-        successors = problem.getSuccessors(current)
-        for successor in successors:
-            stack.push(successor[0])
-            solution[successor[0]] = current
-            print "adding ", current, " to ", successor[0]
-
-    newList = []
-    import pprint
-    print "solution contains: "
-    pprint.pprint(solution)
-
-
-    for value in range(5):
-        print "curr is: ", goal
-        print "path to goal is: ", solution[goal]
-        goal = solution[goal]
-
-    return
-    while goal != None:
-        print goal
-        print solution[goal]
-        goal = solution[goal]
-
+    # return []
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
