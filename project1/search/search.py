@@ -79,9 +79,9 @@ def depthFirstSearch(problem):
         directions list: list of directions used to move to this node
         visited list: list of nodes already visisted
 
-        Summary:
+        Summary:  !!!!!RE-WRITE THIS!!!!!
         1. Initialise stack
-        2. Take currentNode from top of stack
+        2. Take currentNode from top of stack, check if it is the goal
         3. If already visited, take next node
         4. If not visisted, check if it is the goal and return list of directions used to get there
         5. If not the goal, push the currentNode to the stack, along with the nextDirection used to get there, and add it to the list of visisted nodes
@@ -94,14 +94,15 @@ def depthFirstSearch(problem):
 
     while not stack.isEmpty():
         current, directions, visited = stack.pop()
-        for nextNode, nextDirection, previousNodes in problem.getSuccessors(current):
+        if problem.isGoalState(current):
+            return directions
+        for nextNode, nextDirection, cost in problem.getSuccessors(current):
             if nextNode not in visited:
-                if problem.isGoalState(nextNode):
-                    return directions + [nextDirection]
                 stack.push((nextNode, directions + [nextDirection], visited
                     + [current] ))
 
-    # return []
+    # return an empty list if no path is find (the stack is used up/empty)
+    return []
 
 def breadthFirstSearch(problem):
 
@@ -120,16 +121,40 @@ def breadthFirstSearch(problem):
         current, directions, visited = q.pop()
         if problem.isGoalState(current):
             return directions
-        for nextNode, nextDirection, previousNodes in problem.getSuccessors(current):
+        for nextNode, nextDirection, cost in problem.getSuccessors(current):
             if nextNode not in visited:
                 q.push((nextNode, directions + [nextDirection], visited + [current]))
 
+    # return an empty list if no path to goal is found
     return []
 
 def uniformCostSearch(problem):
-    """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """
+        Summary:
+        1. Using a priority queue
+        2. Insert start into queue, with priority=0
+        3. Dequeue top priority successor
+        4. If at goal, return
+        5. If not at goal, insert all successors with cumulative cost as priority (cumulative cost found using getCostOfActions() )
+
+        pq: a priority queue holding [(node, directions, visited), priority]
+    """
+
+    from util import PriorityQueue
+    pq = PriorityQueue()
+    pq.push( (problem.getStartState(), [], []), 0 )
+
+    while not pq.isEmpty():
+        current, directions, visited = pq.pop()
+        if problem.isGoalState(current):
+            return directions
+        for nextNode, nextDirection, cost in problem.getSuccessors(current):
+            if nextNode not in visited:
+                pq.push( (nextNode, directions + [nextDirection], visited + [current]), problem.getCostOfActions(directions + [nextDirection]) )
+
+    # return an empty list if no path to goal is found
+    return []
+
 
 def nullHeuristic(state, problem=None):
     """
