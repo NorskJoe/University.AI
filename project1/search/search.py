@@ -84,7 +84,8 @@ def depthFirstSearch(problem):
         2. Take currentNode from top of stack
         3. If already visited, take next node
         4. If not visisted, check if it is the goal and return list of directions used to get there
-        5. If not the goal, push the currentNode to the stack, along with the direction used to get there, and add it to the list of visisted nodes
+        5. If not the goal, push the currentNode to the stack, along with the nextDirection used to get there, and add it to the list of visisted nodes
+        6. When returning, the list of directions stored in stack[1] should be the correct solution using DFS
     """
     # first initialise the stack
     from util import Stack
@@ -93,20 +94,37 @@ def depthFirstSearch(problem):
 
     while not stack.isEmpty():
         current, directions, visited = stack.pop()
-        for nextNode, direction, previous in problem.getSuccessors(current):
+        for nextNode, nextDirection, previousNodes in problem.getSuccessors(current):
             if nextNode not in visited:
                 if problem.isGoalState(nextNode):
-                    return directions + [direction]
-                stack.push((nextNode, directions + [direction], visited
+                    return directions + [nextDirection]
+                stack.push((nextNode, directions + [nextDirection], visited
                     + [current] ))
-                print stack.pop()
 
     # return []
 
 def breadthFirstSearch(problem):
-    """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    """
+        Summary:
+        1. Queue contains frontier of nodes that algorithm is searching (FIFO)
+        2. Each node is visited or not visited
+        3. For each node that is in frontier that has not been visited, mark it as visisted and check for goal
+    """
+
+    from util import Queue
+    q = Queue()
+    q.push((problem.getStartState(), [], []))
+
+    while not q.isEmpty():
+        current, directions, visited = q.pop()
+        if problem.isGoalState(current):
+            return directions
+        for nextNode, nextDirection, previousNodes in problem.getSuccessors(current):
+            if nextNode not in visited:
+                q.push((nextNode, directions + [nextDirection], visited + [current]))
+
+    return []
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
