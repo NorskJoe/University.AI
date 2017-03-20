@@ -109,23 +109,32 @@ def breadthFirstSearch(problem):
     """
         Summary:
         1. Queue contains frontier of nodes that algorithm is searching (FIFO)
-        2. Each node is visited or not visited
+        2. Each node is visited or not visited (closedSet)
         3. For each node that is in frontier that has not been visited, mark it as visisted and check for goal
+
+
+        q: A queue containing a tuple
+            (currentPosition, directionList)
     """
 
     from util import Queue
     q = Queue()
-    q.push((problem.getStartState(), [], []))
+    q.push((problem.getStartState(), []))
+    closedSet = list()
 
     while not q.isEmpty():
-        current, directions, visited = q.pop()
+        current, directions = q.pop()
         if problem.isGoalState(current):
+            print "returning directions in BFS"
             return directions
-        for nextNode, nextDirection, cost in problem.getSuccessors(current):
-            if nextNode not in visited:
-                q.push((nextNode, directions + [nextDirection], visited + [current]))
+        if current not in closedSet:
+            closedSet.append(current)
+            for nextNode, nextDirection, cost in problem.getSuccessors(current):
+                q.push((nextNode, directions + [nextDirection]))
 
-    # return an empty list if no path to goal is found
+
+    # return an empty list if no path to goal is found ERROR
+    print "returning empty list in BFS because of empty queue"
     return []
 
 def uniformCostSearch(problem):
@@ -135,22 +144,26 @@ def uniformCostSearch(problem):
         2. Insert start into queue, with priority=0
         3. Dequeue top priority successor
         4. If at goal, return
-        5. If not at goal, insert all successors with cumulative cost as priority (cumulative cost found using getCostOfActions() )
+        5. If not at goal, insert all successors with cumulative cost as priority (cumulative cost found using getCostOfActions())
 
         pq: a priority queue holding [(node, directions, visited), priority]
     """
 
     from util import PriorityQueue
     pq = PriorityQueue()
-    pq.push( (problem.getStartState(), [], []), 0 )
+    pq.push( (problem.getStartState(), []), 0 )
+    visited = list()
 
     while not pq.isEmpty():
-        current, directions, visited = pq.pop()
+        current, directions = pq.pop()
         if problem.isGoalState(current):
             return directions
-        for nextNode, nextDirection, cost in problem.getSuccessors(current):
-            if nextNode not in visited:
-                pq.push( (nextNode, directions + [nextDirection], visited + [current]), problem.getCostOfActions(directions + [nextDirection]) )
+        if current not in visited:
+            visited.append(current)
+            for nextNode, nextDirection, cost in problem.getSuccessors(current):
+                pq.push( (nextNode, directions + [nextDirection]),
+                    problem.getCostOfActions(directions + [nextDirection]) )
+            # if nextNode not in visited:
 
     # return an empty list if no path to goal is found
     return []
@@ -164,9 +177,33 @@ def nullHeuristic(state, problem=None):
     return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    """
+        Note: heuristic used as a function. heuristic(current, problem) to obtain a 'heuristic score'
+
+        Summary:
+        1: Very similar to Uniform Cost Search except the priority given in the priority queue is obtained using a heuristic
+    """
+
+    from util import PriorityQueue
+    pq = PriorityQueue()
+    pq.push( (problem.getStartState(), []), heuristic(problem.getStartState(), problem) )
+    closedSet = list()
+
+    while not pq.isEmpty():
+        current, directions = pq.pop()
+        if problem.isGoalState(current):
+            return directions
+        if current not in closedSet:
+            closedSet.append(current)
+            for nextNode, nextDirection, cost in problem.getSuccessors(current):
+                if nextNode not in closedSet:
+                    heuristicScore = (problem.getCostOfActions(directions + [nextDirection])) + (heuristic(nextNode, problem))
+
+                    pq.push( (nextNode, directions + [nextDirection]), heuristicScore )
+
+
+    return []
+
 
 
 # Abbreviations
