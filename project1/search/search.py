@@ -79,30 +79,28 @@ def depthFirstSearch(problem):
         directions list: list of directions used to move to this node
         visited list: list of nodes already visisted
 
-        Summary:  !!!!!RE-WRITE THIS!!!!!
+        Summary:
         1. Initialise stack
         2. Take currentNode from top of stack, check if it is the goal
-        3. If already visited, take next node
-        4. If not visisted, check if it is the goal and return list of directions used to get there
-        5. If not the goal, push the currentNode to the stack, along with the nextDirection used to get there, and add it to the list of visisted nodes
-        6. When returning, the list of directions stored in stack[1] should be the correct solution using DFS
+        3. If not, add to visited list and take current nodes successors and check if visited
+        4. Push each successor to the stack, along with the direction used to get there
+        5. stack[1] will keep track of directions list
     """
     # first initialise the stack
     from util import Stack
     stack = Stack()
-    stack.push((problem.getStartState(), [], []))
+    stack.push((problem.getStartState(), []))
+    visited = list()
 
     while not stack.isEmpty():
-        current, directions, visited = stack.pop()
+        current, directions = stack.pop()
         if problem.isGoalState(current):
             return directions
-        for nextNode, nextDirection, cost in problem.getSuccessors(current):
-            if nextNode not in visited:
-                stack.push((nextNode, directions + [nextDirection], visited
-                    + [current] ))
+        if current not in visited:
+            visited.append(current)
+            for nextNode, nextDirection, cost in problem.getSuccessors(current):
+                stack.push((nextNode, directions + [nextDirection] ))
 
-    # return an empty list if no path is find (the stack is used up/empty)
-    return []
 
 def breadthFirstSearch(problem):
 
@@ -111,6 +109,7 @@ def breadthFirstSearch(problem):
         1. Queue contains frontier of nodes that algorithm is searching (FIFO)
         2. Each node is visited or not visited (closedSet)
         3. For each node that is in frontier that has not been visited, mark it as visisted and check for goal
+        4. Difference from DFS is the queue data structure
 
 
         q: A queue containing a tuple
@@ -125,17 +124,12 @@ def breadthFirstSearch(problem):
     while not q.isEmpty():
         current, directions = q.pop()
         if problem.isGoalState(current):
-            print "returning directions in BFS"
             return directions
         if current not in closedSet:
             closedSet.append(current)
             for nextNode, nextDirection, cost in problem.getSuccessors(current):
                 q.push((nextNode, directions + [nextDirection]))
 
-
-    # return an empty list if no path to goal is found ERROR
-    print "returning empty list in BFS because of empty queue"
-    return []
 
 def uniformCostSearch(problem):
     """
@@ -146,7 +140,7 @@ def uniformCostSearch(problem):
         4. If at goal, return
         5. If not at goal, insert all successors with cumulative cost as priority (cumulative cost found using getCostOfActions())
 
-        pq: a priority queue holding [(node, directions, visited), priority]
+        pq: a priority queue holding [(node, directions), priority]
     """
 
     from util import PriorityQueue
@@ -163,10 +157,7 @@ def uniformCostSearch(problem):
             for nextNode, nextDirection, cost in problem.getSuccessors(current):
                 pq.push( (nextNode, directions + [nextDirection]),
                     problem.getCostOfActions(directions + [nextDirection]) )
-            # if nextNode not in visited:
 
-    # return an empty list if no path to goal is found
-    return []
 
 
 def nullHeuristic(state, problem=None):
@@ -201,8 +192,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
                     pq.push( (nextNode, directions + [nextDirection]), heuristicScore )
 
-
-    return []
 
 
 

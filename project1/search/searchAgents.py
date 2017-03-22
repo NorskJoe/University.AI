@@ -372,19 +372,18 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     node = state[0]
+    goalList = list(state[1])
     distances = list()
     # return 0 if at corner
     if node in corners:
         return 0
     else:
-        heuristic = 0
         # find the manhattan distance for each corner, and return the value
         # of the lowest (closest)
         for corner in goalList:
             distances.append(util.manhattanDistance(node, corner))
 
-    heuristic = min(distances)
-    return heuristic
+    return min(distances)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -477,8 +476,122 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    foodList = list(foodGrid.asList())
+
+    if position in foodList:
+        return 0
+
+    """ using the sum of manhattan distances for each food NOT CONSISTENT """
+    # width = foodGrid.width-2
+    # height = foodGrid.height-2
+    # manhattanSum = 0
+    # for y in range(height):
+    #     for x in range(width):
+    #         if foodGrid[x][y]:
+    #             manhattanSum += util.manhattanDistance(position, (x,y))
+    # return manhattanSum
+
+    """
+        First version, not very efficient.  Returns the minimum
+        manhattanDistance
+    """
+    # for food in foodList:
+    #     distances.append(util.manhattanDistance(position, food))
+    #     foodList.remove(food)
+    #
+    # if len(distances) > 0:
+    #     return min(distances)
+    #
+    # return 0
+
+    """
+    1. Find the closest fruit, if more than one, just choose first (using manhattan distance to find nearest fruit)
+    2. Remove closest from list of fruit, add distance to running total
+    3. Find closest fruit to this fruit adding distance to total
+    4. Repeat for all fruit and return total cost
+
+    Note: Optimised by favouring fruit that is in a 'cluster'
+
+    15876 nodes expanded (CLUSTER_DISTANCE = 5)
+    7309 nodes expanded (CLUSTER_DISTANCE = 2) NOT ADMISSIBLE
+    7309 nodes expanded (CLUSTER_DISTANCE dependent on dimensions of grid)
+
+    """
+    width = foodGrid.width-2
+    height = foodGrid.height-2
+    if width <= 4 or height <= 4:
+        CLUSTER_DISTANCE = 5
+    else:
+        CLUSTER_DISTANCE = 2
+    result = 0
+    while len(foodList) > 0:
+        distances = list()
+        for food in foodList:
+            clusterScore = calculateClusterScore(food, CLUSTER_DISTANCE,
+                foodGrid)
+            distances.append( (food,
+                util.manhattanDistance(position,food) / clusterScore) )
+
+        # arbitrarily take the first item
+        nextFruit, nextDistance = distances[0]
+
+        for fruit, distance in distances:
+            if distance < nextDistance:
+                nextDistance = distance
+                nextFruit = fruit
+        result += nextDistance
+        x,y = nextFruit
+        foodList.remove(nextFruit)
+        position = nextFruit
+
+    return result
+
+#############################################################
+##      Function that returns the number of fruit          ##
+##      within n distance of the currentLocation           ##
+#############################################################
+def calculateClusterScore(currentLocation, bound, foodGrid):
+    x,y = currentLocation
+    score = 1.0
+    NFlag = False
+    EFlag = False
+    SFlag = False
+    WFlag = False
+    for nextx in range(1,bound):
+        for nexty in range(1,bound):
+            nextyNorth = y + nexty
+            nextxEast = x + nextx
+            nextySouth = y - nexty
+            nextxWest = x - nextx
+            # check East
+            if nextxEast <= foodGrid.width-2:
+                EFLag = True
+                if foodGrid[nextxEast][y]:
+                    score += 1
+            # check north
+            if nextyNorth <= foodGrid.height-2:
+                NFlag = True
+                if foodGrid[x][nextyNorth]:
+                    score += 1
+            # check north-east
+            if NFlag and EFlag:
+                if foodGrid[nextxEast][nextyNorth]:
+                    score += 1
+            # check west
+            if nextxWest >= 0:
+                WFlag = True
+                if foodGrid[nextxWest][y]:
+                    score += 1
+            # check south
+            if nextySouth >= 0:
+                if foodGrid[x][nextySouth]:
+                    SFlag = True
+                    score += 1
+            # check south-west
+            if WFlag and SFlag:
+                if foodGrid[nextxWest][nextySouth]:
+                    score += 1
+    return score
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -502,14 +615,8 @@ class ClosestDotSearchAgent(SearchAgent):
         Returns a path (a list of actions) to the closest dot, starting from
         gameState.
         """
-        # Here are some useful elements of the startState
-        startPosition = gameState.getPacmanPosition()
-        food = gameState.getFood()
-        walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return search.breadthFirstSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -542,10 +649,10 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if state in self.food.asList():
+            return True
+        else:
+            return False
 
 def mazeDistance(point1, point2, gameState):
     """
