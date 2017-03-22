@@ -1,0 +1,11 @@
+Question 7 comments:
+	I found this question by far the most difficult.  I tried several different
+	heuristics that were all not admissible.  The one I settled on was also
+	not admissible until I added the cluster score aspect to it.  Even then,
+	how to find the cluster score was difficult.
+	My solution changes how far	to search for other food items (the cluster
+	score) depending on how large the grid is.  Although the algorithm finds a
+	good solution, it takes a lot of time/memory.
+	I also feel like the dynamic changing of the cluster score (line 522-525)
+	is a little bit 'hacky' and was arrived at mainly through trial and error.
+	I would have liked to improve that given more time.
