@@ -334,8 +334,69 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        """Similar to minimax algorithm, except when a ghost agents turn, the
+        score is the average of all possible scores for that turn, Implemented
+        in minFunction() """
+        agent = 0
+        depth = 0
+        bestMove = self.expectimaxControl(gameState, agent, depth)
+        return bestMove[0]
+
+    def expectimaxControl(self, gameState, agent, depth):
+        if agent >= gameState.getNumAgents():
+            agent = 0
+            depth +=1
+
+        if depth >= self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        if agent == 0:
+            return self.maxFunction(gameState, agent, depth)
+        else:
+            return self.minFunction(gameState, agent, depth)
+
+    def maxFunction(self, gameState, agent, depth):
+        bestMove = [None, -float("inf")]
+        legalActions = gameState.getLegalActions(agent)
+
+        for action in legalActions:
+            score = self.expectimaxControl(gameState.generateSuccessor
+                (agent, action), agent+1, depth)
+
+            if isinstance(score, list):
+                newScore = score[1]
+            else:
+                newScore = score
+
+            if newScore > bestMove[1]:
+                bestMove = [action, newScore]
+        return bestMove
+
+    def minFunction(self, gameState, agent, depth):
+        bestMove = [None, 0]
+        legalActions = gameState.getLegalActions(agent)
+
+        # the probability of a ghost doing any particlar action is 1/number of
+        # actions, since the choice of action is random
+        probability = 1.0/len(legalActions)
+        avgScore = 0.0
+
+        for action in legalActions:
+            score = self.expectimaxControl(gameState.generateSuccessor
+                (agent, action), agent+1, depth)
+
+            if isinstance(score, list):
+                newScore = score[1]
+            else:
+                newScore = score
+
+            ## avgScore is the average score of all possible actions for the
+            ## ghost in this state
+            avgScore += newScore*probability
+            bestMove = [action, avgScore]
+
+
+        return bestMove
 
 def betterEvaluationFunction(currentGameState):
     """
