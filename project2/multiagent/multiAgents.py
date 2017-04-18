@@ -126,9 +126,8 @@ class ReflexAgent(Agent):
         # ghostScore is the reciprocal of manhattan distance to closest ghost
         ghostScore = 1.0 / closestGhost
 
-        totalScaredTime = sum(newScaredTimes)
 
-        return successorGameState.getScore() + foodScore/ghostScore + totalScaredTime
+        return successorGameState.getScore() + foodScore/ghostScore
 
 
 def scoreEvaluationFunction(currentGameState):
@@ -403,10 +402,65 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION:
+        foodScore and ghostScore are obtained in the same way as Q1
+
+        capsuleScore is obtained same as foodScore.  This is added to foodScore
+
+        return value is updated the same way as in Q1
+        (score = getScore() + foodScore/ghostScore + sum scared times)
+
+        sum of scared times is added, as the higher this is, the more benefical
+        a move in general
+
+        main changes from Q1 are adding capsule score, and adding the sum of
+        scared times to the final result
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    currPos = currentGameState.getPacmanPosition()
+    score = currentGameState.getScore()
+    foodList = currentGameState.getFood().asList()
+    ghostList = currentGameState.getGhostStates()
+    # food score
+    closestFood = 10000
+    # get the manhattan distance to the closest food
+    for food in foodList:
+        distance = manhattanDistance(currPos, food)
+        if distance < closestFood:
+            closestFood = distance
+    # foodScore is the reciprocal of manhattan distance os closest food
+    foodScore = 1.0 / closestFood
+
+    # ghost score
+    # get the ghost score in the same way of getting the food score
+    closestGhost = 10000
+    for ghost in ghostList:
+        # if closest ghost is 'scared' and within 3 tiles return a high (good) score
+        distance = manhattanDistance(currPos, ghost.getPosition())
+        if ghost.scaredTimer > 0 and distance <= 3:
+            return 10000
+        if distance < closestGhost:
+            closestGhost = distance
+    # if the ghost is within 1 tile, return a low (bad) score
+    if closestGhost <= 1:
+        return -10000
+    # ghostScore is the reciprocal of manhattan distance to closest ghost
+    ghostScore = 1.0 / closestGhost
+
+    # capsule score, same as previous two scores
+    closestCapsule = 10000
+    for capsule in currentGameState.getCapsules():
+        distance = manhattanDistance(currPos, capsule)
+        if distance <= closestCapsule:
+            closestCapsule = distance
+    # heavier weight is given to capsules as they allow pacman to eat ghosts
+    capsuleScore = 1.0 / closestCapsule
+
+    # new foodScore is foodScore + capsuleScore
+    foodScore = foodScore + capsuleScore
+    # update return calue same way as done in 'bad' evaluation function
+    return score + (foodScore/ghostScore) + sum(ghost.scaredTimer for ghost in ghostList)
+
+
 
 # Abbreviation
 better = betterEvaluationFunction
