@@ -114,6 +114,9 @@ class ReflexAgent(Agent):
         # get the ghost score in the same way of getting the food score
         closestGhost = 10000
         for ghost in newGhostStates:
+            # if closest ghost is 'scared' and within 3 tiles return a high (good) score
+            if ghost.scaredTimer > 0 and distance <= 3:
+                return 10000
             distance = manhattanDistance(newPos, ghost.getPosition())
             if distance < closestGhost:
                 closestGhost = distance
@@ -170,18 +173,121 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
           Here are some method calls that might be useful when implementing minimax.
 
-          gameState.getLegalActions(agentIndex):
+          gameState.getLegalActions(agent):
             Returns a list of legal actions for an agent
-            agentIndex=0 means Pacman, ghosts are >= 1
+            agent=0 means Pacman, ghosts are >= 1
 
-          gameState.generateSuccessor(agentIndex, action):
+          gameState.generateSuccessor(agent, action):
             Returns the successor game state after an agent takes an action
 
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # call control function starting at depth 0 and agent=pacman (0)
+        bestMove = self.minimaxControl(gameState, 0, 0)
+        return bestMove[0]
+    """
+    Control function is called, checks max/min player and depth calls
+    appropriate function.  Also has terminal check for ending recursion.
+    """
+    def minimaxControl(self, gameState, depth, agent):
+        if agent >= gameState.getNumAgents():
+            agent = 0 # go back to pacman for next depth
+            depth += 1
+
+        # terminal state Check
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        if agent == 0: # pacman (max-player)
+            return self.maxFunction(gameState, depth, agent)
+        else: # ghost (min-player)
+            return self.minFunction(gameState, depth, agent)
+
+    """
+    maxFunction called when checking pacman's move.  Returns the move
+    that will maximise score of all possible legal pacman actions.
+    Return value is a tuple of [action, score] for easy access
+    """
+    def maxFunction(self, gameState, depth, agent):
+        legalActions = gameState.getLegalActions(agent)
+        bestMove = [None, -10000]
+
+        for action in legalActions:
+            score = self.minimaxControl(gameState.generateSuccessor
+                (agent, action), depth, agent+1)
+            if isinstance(score, list):
+                if score[1] > bestMove[1]:
+                    bestMove = [action, score[1]]
+            else:
+                if score > bestMove[1]:
+                    bestMove = [action, score]
+        return bestMove
+
+    """
+    Works the same as maxFunction, called when checking ghost's move.
+    """
+    def minFunction(self, gameState, depth, agent):
+        legalActions = gameState.getLegalActions(agent)
+        bestMove = [None, 10000]
+
+        for action in legalActions:
+            score = self.minimaxControl(gameState.generateSuccessor
+                (agent, action), depth, agent+1)
+            if isinstance(score, list):
+                if score[1] < bestMove[1]:
+                    bestMove = [action, score[1]]
+            else:
+                if score < bestMove[1]:
+                    bestMove = [action, score]
+        return bestMove
+    """
+    First attempt.  Changed to make it more readable and separated into
+        functions
+    """
+    # """
+    # Recursive function:
+    # Builds the tree from bottom to top.
+    # """
+    # def miniMaxFunction(self, gameState, depth, agent):
+    #     # check if at terminal node/state. Return the score/utility for this
+    #     # node
+    #     if depth > self.depth or gameState.isWin() or gameState.isLose():
+    #         return self.evaluationFunction(gameState)
+    #
+    #     # get legal actions
+    #     actions = gameState.getLegalActions(agent)
+    #
+    #     # update next iteration values
+    #     # first go through all agents for given depth
+    #     # then move onto next depth and start at agent 0 (pacman)
+    #     nextAgent = agent + 1
+    #     nextDepth = depth
+    #     if nextAgent >= gameState.getNumAgents():
+    #         nextAgent = 0
+    #         nextDepth += 1
+    #
+    #     # get the score/utility for each state by recursively calling function
+    #     # for each successor of current agent-depth state
+    #     scores = []
+    #     for action in actions:
+    #         scores.append(self.miniMaxFunction
+    #             (gameState.generateSuccessor(agent, action),
+    #                 nextDepth, nextAgent))
+    #
+    #     # first move for pacman, does not occur until tree is built
+    #     if agent == 0 and depth == 1:
+    #         bestAction = max(scores)
+    #         indices = []
+    #         for index in range(len(scores)):
+    #             if scores[index] == bestAction:
+    #                 indices.append(index)
+    #         return actions[random.choice(indices)]
+    #
+    #     if agent == 0: # pacman
+    #         return max(scores)
+    #     else: # ghost
+    #         return min(scores)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
