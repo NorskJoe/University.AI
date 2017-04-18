@@ -213,9 +213,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         legalActions = gameState.getLegalActions(agent)
         bestMove = [None, -10000]
 
+        # check the score for all legal actions possible
         for action in legalActions:
             score = self.minimaxControl(gameState.generateSuccessor
                 (agent, action), depth, agent+1)
+            # some actions/nodes will return a score that is only a score, not
+            # an action,score tuple. isintance checks for this
             if isinstance(score, list):
                 if score[1] > bestMove[1]:
                     bestMove = [action, score[1]]
@@ -241,53 +244,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 if score < bestMove[1]:
                     bestMove = [action, score]
         return bestMove
-    """
-    First attempt.  Changed to make it more readable and separated into
-        functions
-    """
-    # """
-    # Recursive function:
-    # Builds the tree from bottom to top.
-    # """
-    # def miniMaxFunction(self, gameState, depth, agent):
-    #     # check if at terminal node/state. Return the score/utility for this
-    #     # node
-    #     if depth > self.depth or gameState.isWin() or gameState.isLose():
-    #         return self.evaluationFunction(gameState)
-    #
-    #     # get legal actions
-    #     actions = gameState.getLegalActions(agent)
-    #
-    #     # update next iteration values
-    #     # first go through all agents for given depth
-    #     # then move onto next depth and start at agent 0 (pacman)
-    #     nextAgent = agent + 1
-    #     nextDepth = depth
-    #     if nextAgent >= gameState.getNumAgents():
-    #         nextAgent = 0
-    #         nextDepth += 1
-    #
-    #     # get the score/utility for each state by recursively calling function
-    #     # for each successor of current agent-depth state
-    #     scores = []
-    #     for action in actions:
-    #         scores.append(self.miniMaxFunction
-    #             (gameState.generateSuccessor(agent, action),
-    #                 nextDepth, nextAgent))
-    #
-    #     # first move for pacman, does not occur until tree is built
-    #     if agent == 0 and depth == 1:
-    #         bestAction = max(scores)
-    #         indices = []
-    #         for index in range(len(scores)):
-    #             if scores[index] == bestAction:
-    #                 indices.append(index)
-    #         return actions[random.choice(indices)]
-    #
-    #     if agent == 0: # pacman
-    #         return max(scores)
-    #     else: # ghost
-    #         return min(scores)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -298,8 +254,73 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "Implemented the same as minimax, except adding alpha-beta checks"
+        pacmanAgent = 0
+        depth = 0
+        alpha = -float("inf")
+        beta = float("inf")
+        bestMove = self.alphaBetaControl(gameState, pacmanAgent, depth, alpha, beta)
+        return bestMove[0]
+
+    def alphaBetaControl(self, gameState, agent, depth, alpha, beta):
+        if agent >= gameState.getNumAgents():
+            agent = 0
+            depth += 1
+
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        if agent == 0:
+            return self.maxFinder(gameState, agent, depth, alpha, beta)
+        else:
+            return self.minFinder(gameState, agent, depth, alpha, beta)
+
+    def maxFinder(self, gameState, agent, depth, alpha, beta):
+        legalActions = gameState.getLegalActions(agent)
+        bestMove = [None, -float("inf")]
+
+        # check the score for all legal actions possible
+        for action in legalActions:
+            score = self.alphaBetaControl(gameState.generateSuccessor
+                (agent, action), agent+1, depth, alpha, beta)
+
+            # some actions/nodes will return a score that is only a score, not
+            # an (action,score) tuple. isintance checks for this
+            if isinstance(score, list):
+                newScore = score[1]
+            else:
+                newScore = score
+
+            if newScore > bestMove[1]:
+                bestMove = [action, newScore]
+            if newScore > beta:
+                return [action, newScore]
+            alpha = max(newScore, alpha)
+        return bestMove
+
+    def minFinder(self, gameState, agent, depth, alpha, beta):
+        legalActions = gameState.getLegalActions(agent)
+        bestMove = [None, float("inf")]
+
+        # check the score for all legal actions possible
+        for action in legalActions:
+            score = self.alphaBetaControl(gameState.generateSuccessor
+                (agent, action), agent+1, depth, alpha, beta)
+
+            # some actions/nodes will return a score that is only a score, not
+            # an action,score tuple. isintance checks for this
+            if isinstance(score, list):
+                newScore = score[1]
+            else:
+                newScore = score
+
+            if newScore < bestMove[1]:
+                bestMove = [action, newScore]
+            if newScore < alpha:
+                return [action, newScore]
+            beta = min(newScore, beta)
+        return bestMove
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
