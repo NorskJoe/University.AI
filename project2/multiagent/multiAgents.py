@@ -73,32 +73,6 @@ class ReflexAgent(Agent):
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
-        """
-        using manhattan distance on potential new position:
-            if ghost within 1 tiles: score -100, else score +100
-            if food within 5 tiles: score + 100
-            get reciprocal of each score
-            return gScore/fScore + next move score
-        """
-        # foodScore = 0.0
-        # ghostScore = 0.0
-        # for ghost in newGhostStates:
-        #     distance = manhattanDistance(ghost.getPosition(), newPos)
-        #     if(distance <= 1):
-        #         ghostScore -= 100
-        #     else: # distance is greater score + 100
-        #         ghostScore += 100
-        #
-        # for food in newFood.asList():
-        #     distance = manhattanDistance(food, newPos)
-        #     if(distance <= 5):
-        #         foodScore += 100
-        #     else: # calculate score based on 100 / distance to food
-        #         foodScore += 100.0/distance
-        #
-        # # ghostScore = 1/ghostScore
-        # # foodScore = 1/foodScore
-        # return (foodScore/ghostScore) + successorGameState.getScore()
 
         # food score
         closestFood = 10000
@@ -115,9 +89,9 @@ class ReflexAgent(Agent):
         closestGhost = 10000
         for ghost in newGhostStates:
             # if closest ghost is 'scared' and within 3 tiles return a high (good) score
+            distance = manhattanDistance(newPos, ghost.getPosition())
             if ghost.scaredTimer > 0 and distance <= 3:
                 return 10000
-            distance = manhattanDistance(newPos, ghost.getPosition())
             if distance < closestGhost:
                 closestGhost = distance
         # if the ghost is within 1 tile, return a low (bad) score
@@ -292,9 +266,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
             if newScore > bestMove[1]:
                 bestMove = [action, newScore]
-            if newScore > beta:
-                return [action, newScore]
             alpha = max(newScore, alpha)
+            if alpha > beta: # prune
+                return [action, newScore]
         return bestMove
 
     def minFinder(self, gameState, agent, depth, alpha, beta):
@@ -315,9 +289,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
             if newScore < bestMove[1]:
                 bestMove = [action, newScore]
-            if newScore < alpha:
-                return [action, newScore]
             beta = min(newScore, beta)
+            if alpha > beta: # prune
+                return [action, newScore]
         return bestMove
 
 
