@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -33,9 +33,9 @@ class ValueIterationAgent(ValueEstimationAgent):
 
           Some useful mdp methods you will use:
               mdp.getStates()
-              mdp.getPossibleActions(state)
-              mdp.getTransitionStatesAndProbs(state, action)
-              mdp.getReward(state, action, nextState)
+              mdp.getPossibleActions(state) # states
+              mdp.getTransitionStatesAndProbs(state, action) # transition model
+              mdp.getReward(state, action, nextState) # utility
               mdp.isTerminal(state)
         """
         self.mdp = mdp
@@ -44,7 +44,53 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = util.Counter() # A Counter is a dict with default 0
 
         # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        # print "discount: ", discount
+        # print "iterations: ", iterations
+        # print "values: ", self.values
+        #
+        # print "states: ", mdp.getStates()
+        # for state in mdp.getStates():
+        #     print "state: ", state
+        #     print "possible actions: ", mdp.getPossibleActions(state)
+        #
+        #     for action in mdp.getPossibleActions(state):
+        #         print "action: ", action
+        #
+        #         for transState, prob in mdp.getTransitionStatesAndProbs(state, action):
+        #             print "nextState: ", transState
+        #             print "probability: ", prob
+        #             print "reward: ", mdp.getReward(state, action, transState)
+        #
+        #         print "\n"
+
+        # print mdp.getTransitionStatesAndProbs(state, action)
+        # print mdp.getReward(state, action, nextState)
+        # print mdp.isTerminal(state)
+
+        """
+        Algorithm developed with help from pseudocode at:
+            http://artint.info/html/ArtInt_227.html
+            and
+            https://github.com/aimacode/aima-pseudocode/blob/master/md/
+                Value-Iteration.md
+            and
+            http://stackoverflow.com/questions/8337417/markov-decision-process-
+                value-iteration-how-does-it-work
+        """
+        i = 0
+        while(i < iterations):
+            # 'vector' of utilities for states
+            U = self.values.copy();
+            for state in mdp.getStates():
+                actionCost = util.Counter()
+                if mdp.isTerminal(state) == False:
+                    for action in mdp.getPossibleActions(state):
+                        for (nextState, probability) in mdp.getTransitionStatesAndProbs(state, action):
+                            reward = mdp.getReward(state, action, nextState)
+                            actionCost[action] += probability * (reward + (discount * U[nextState]))
+
+                    self.values[state] = actionCost[actionCost.argMax()]
+            i += 1
 
 
     def getValue(self, state):
@@ -59,8 +105,13 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        mdp = self.mdp
+        value = 0
+        if mdp.isTerminal(state) == False:
+            for (nextState, probability) in mdp.getTransitionStatesAndProbs(state, action):
+                reward = mdp.getReward(state, action, nextState)
+                value += probability * (reward + (self.discount * self.values[nextState]))
+        return value
 
     def computeActionFromValues(self, state):
         """
@@ -71,8 +122,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        mdp = self.mdp
+        if mdp.isTerminal(state) == False:
+            scores = list() # add all score-action tuples to a list
+
+            for action in mdp.getPossibleActions(state):
+                score = self.getQValue(state, action)
+                scores.append((score, action))
+            # find the best score in the list and return the action
+            bestMove = max(scores, key=lambda x: x[0])
+            return bestMove[1]
+        else:
+            return None
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
