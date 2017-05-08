@@ -103,11 +103,15 @@ class QLearningAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
-        return action
+        chooseRandom = util.flipCoin(self.epsilon)
+        if chooseRandom:
+            return random.choice(legalActions) # choose a random action
+        else:
+            return self.computeActionFromQValues(state) # choose the best action
+
+
+        # return action
 
     def update(self, state, action, nextState, reward):
         """
@@ -117,6 +121,11 @@ class QLearningAgent(ReinforcementAgent):
 
           NOTE: You should never call this function,
           it will be called on your behalf
+        """
+        """
+        Helped by pseudocode in lecture 'Reinforcement Learning'
+        and
+        https://github.com/aimacode/aima-pseudocode/blob/6df0080b126ed9005c26f843b22b790f09f97af8/md/Q-Learning-Agent.md
         """
         alpha = self.alpha
         discount = self.discount
@@ -132,6 +141,7 @@ class QLearningAgent(ReinforcementAgent):
 
         maximum = maxReward[maxReward.argMax()]
 
+        # main calculation for q values
         newValue = qValue + (alpha * frequency[(nextState,action)]) * (reward + (discount*maximum) - qValue)
 
         self.qValues[(state,action)] = newValue
