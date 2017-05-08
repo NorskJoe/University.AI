@@ -79,16 +79,21 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         i = 0
         while(i < iterations):
-            # 'vector' of utilities for states
+            # 'vector'/dict of utilities for states
             U = self.values.copy();
             for state in mdp.getStates():
                 actionCost = util.Counter()
                 if mdp.isTerminal(state) == False:
                     for action in mdp.getPossibleActions(state):
+                        utilities = util.Counter()
+                        j = 0;
                         for (nextState, probability) in mdp.getTransitionStatesAndProbs(state, action):
-                            reward = mdp.getReward(state, action, nextState)
-                            actionCost[action] += probability * (reward + (discount * U[nextState]))
 
+                            reward = mdp.getReward(state, action, nextState)
+                            utilities[j] = probability * (reward + (discount * U[nextState]))
+                            j += 1
+
+                        actionCost[action] = utilities.totalCount()
                     self.values[state] = actionCost[actionCost.argMax()]
             i += 1
 
