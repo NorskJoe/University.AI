@@ -1,4 +1,4 @@
-# valueIterationAgents.py
+3   # valueIterationAgents.py
 # -----------------------
 # Licensing Information:  You are free to use or extend these projects for
 # educational purposes provided that (1) you do not distribute or publish
@@ -42,7 +42,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
-
+        " testing code to check all values"
         # Write value iteration code here
         # print "discount: ", discount
         # print "iterations: ", iterations
@@ -71,31 +71,35 @@ class ValueIterationAgent(ValueEstimationAgent):
         Algorithm developed with help from pseudocode at:
             http://artint.info/html/ArtInt_227.html
             and
-            https://github.com/aimacode/aima-pseudocode/blob/master/md/
-                Value-Iteration.md
+            https://github.com/aimacode/aima-pseudocode/blob/master/md/Value-Iteration.md
             and
-            http://stackoverflow.com/questions/8337417/markov-decision-process-
-                value-iteration-how-does-it-work
+            http://stackoverflow.com/questions/8337417/markov-decision-process-value-iteration-how-does-it-work
         """
         i = 0
         while(i < iterations):
             # 'vector'/dict of utilities for states
-            U = self.values.copy();
+            U = self.values.copy()
             for state in mdp.getStates():
-                actionCost = util.Counter()
-                if mdp.isTerminal(state) == False:
-                    for action in mdp.getPossibleActions(state):
-                        utilities = util.Counter()
-                        j = 0;
+                # maps each action in this state to a utility score
+                utility = util.Counter()
+                legalActions = mdp.getPossibleActions(state)
+                if legalActions: # handles case of there being no available actions/terminal state
+                    for action in legalActions:
+                        rewards = util.Counter() #used to sum all rewards
+                        counter = 0
                         for (nextState, probability) in mdp.getTransitionStatesAndProbs(state, action):
-
+                            # main calculation
                             reward = mdp.getReward(state, action, nextState)
-                            utilities[j] = probability * (reward + (discount * U[nextState]))
-                            j += 1
+                            rewards[counter] = probability * (reward + (discount * U[nextState]))
+                            counter += 1
+                        # get sum of rewards
+                        utility[action] = rewards.totalCount()
+                    # get the max score/action for this state
+                    bestScore = utility[utility.argMax()]
+                    self.values[state] = bestScore
 
-                        actionCost[action] = utilities.totalCount()
-                    self.values[state] = actionCost[actionCost.argMax()]
             i += 1
+
 
 
     def getValue(self, state):
