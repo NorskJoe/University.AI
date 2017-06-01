@@ -48,3 +48,9 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# recorded games directories and academic hearing
+academic_hearing/
+recordedgames_one/
+recordedgames_two/
+AI-2017-S1/
